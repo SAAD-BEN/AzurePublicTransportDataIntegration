@@ -88,5 +88,34 @@ for date in date_generated:
 
 df = pd.DataFrame(data, columns=["Date", "TransportType", "Route", "DepartureTime", "ArrivalTime", "Passengers", "DepartureStation", "ArrivalStation", "Delay"])
 sparkdf = spark.createDataFrame(df)
-sparkdf.write.format("csv").mode("overwrite").option("header", "true").option("delimiter", ",").save(raw)
 
+
+sparkdf.coalesce(1).write.mode("overwrite").option("header", "true").format("com.databricks.spark.csv").save(raw)
+
+
+# COMMAND ----------
+
+# Mounting data lake
+storageAccountName = "bentalebstorageacc"
+storageAccountAccessKey = "f7yngxT+I8Wzy+J0GAoTGBtjqo92greqVvmofq1zHx8msMTSl33Kws93ICPi6fIAR2z5XFn4t/wD+AStcTUhOQ=="
+sasToken = "?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-09-22T23:46:48Z&st=2023-09-22T15:46:48Z&spr=https&sig=V%2FvnvZQuF1S%2FE1niifdOX5sTSunJqeZIGmtXTxVhM6g%3D"
+blobContainerName = "publictransportdata"
+mountPoint = "/mnt/data/"
+if not any(mount.mountPoint == mountPoint for mount in dbutils.fs.mounts()):
+  try:
+    dbutils.fs.mount(
+      source = "wasbs://{}@{}.blob.core.windows.net".format(blobContainerName, storageAccountName),
+      mount_point = mountPoint,
+      #extra_configs = {'fs.azure.account.key.' + storageAccountName + '.blob.core.windows.net': storageAccountAccessKey}
+      extra_configs = {'fs.azure.sas.' + blobContainerName + '.' + storageAccountName + '.blob.core.windows.net': sasToken}
+    )
+    print("mount succeeded!")
+  except Exception as e:
+    print("mount exception", e)
+
+# COMMAND ----------
+
+output_path = "/mnt/data/raw/output.csv"  
+
+# Write the DataFrame as a CSV file to the mounted Data Lake Storage
+sparkdf.write.mode("overwrite").csv(output_path)
