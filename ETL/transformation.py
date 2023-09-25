@@ -13,6 +13,7 @@ spark.conf.set(
     "lAFhPBYgmGBlkcaW/xObvOI7lrDKAc7UdNgLilVuxHhvBUAlCxo5hBGcuDtvjGeh7M6cT5v5THEu+ASt8S3WoA=="
 )
 raw = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/raw/"
+processed = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/processed/"
 
 
 # COMMAND ----------
@@ -39,6 +40,7 @@ df = df.withColumn("DelayCategory",
 
 # Add Duration column
 df = df.withColumn("ArrivalTime", regexp_replace(df["ArrivalTime"], "24:", "00:"))
+df = df.withColumn("ArrivalTime", regexp_replace(df["ArrivalTime"], "25:", "00:"))
 df = df.withColumn("Duration", (hour(df["ArrivalTime"]) * 60 + minute(df["ArrivalTime"])) - (hour(df["DepartureTime"]) * 60 + minute(df["DepartureTime"])))
 df = df.withColumn("Duration", when(df["Duration"] < 0, df["Duration"] + 24*60).otherwise(df["Duration"]))
 
