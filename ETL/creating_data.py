@@ -103,9 +103,9 @@ for date in date_generated:
 month_i = "01"
 df = pd.DataFrame(data, columns=["Date", "TransportType", "Route", "DepartureTime", "ArrivalTime", "Passengers", "DepartureStation", "ArrivalStation", "Delay"])
 
-df.to_csv("/mnt/publictransportdata/raw/rawTransportDataOf_"+ month_i + ".csv" , index=False)
+df.to_csv("/dbfs/mnt/publictransportdata/test.csv" , index=False)
 
-# sparkdf = spark.createDataFrame(df)
-# output_path = "/raw/" + month_i + ".csv"
-# # Write the DataFrame as a CSV file to the mounted Data Lake Storage
-# sparkdf.coalesce(1).write.mode("overwrite").option("header", "true").format("com.databricks.spark.csv").save(output_path)
+# COMMAND ----------
+
+# MAGIC %fs
+# MAGIC ls /mnt/publictransportdata/
