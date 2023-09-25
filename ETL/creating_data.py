@@ -4,26 +4,41 @@ import random
 from datetime import datetime, timedelta
 from pyspark.sql import SparkSession
 
+
 # COMMAND ----------
 
+# Azure Blob Storage account details
+storage_account_name = "bentalebstorageacc"
+storage_account_access_key = "lAFhPBYgmGBlkcaW/xObvOI7lrDKAc7UdNgLilVuxHhvBUAlCxo5hBGcuDtvjGeh7M6cT5v5THEu+ASt8S3WoA=="
+container_name = "publictransportdata"
+sas_token = "?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-09-25T15:54:47Z&st=2023-09-25T07:54:47Z&spr=https&sig=BzJJqsqJ22NNd7DopZMpHq%2FqMChk9PPTDmGIoiSOOGQ%3D"
+# Mount Azure Blob Storage to a Databricks DBFS path
+mount_point = "/mnt/"+container_name
+if not any(mount.mountPoint == mount_point for mount in dbutils.fs.mounts()):
+  try:
+    dbutils.fs.mount(source=f"wasbs://{storage_account_name}@{container_name}",
+                 mount_point=mount_point,
+                 extra_configs = {'fs.azure.sas.' + container_name + '.' + storage_account_name + '.blob.core.windows.net': sas_token})
+    print("mount succeeded!")
+  except Exception as e:
+    print("mount exception", e)
 
 
+# COMMAND ----------
+
+# connect to azure data lake using direct configurations
 spark.conf.set(
     f"fs.azure.account.key.bentalebstorageacc.dfs.core.windows.net", 
-    "f7yngxT+I8Wzy+J0GAoTGBtjqo92greqVvmofq1zHx8msMTSl33Kws93ICPi6fIAR2z5XFn4t/wD+AStcTUhOQ=="
+    "lAFhPBYgmGBlkcaW/xObvOI7lrDKAc7UdNgLilVuxHhvBUAlCxo5hBGcuDtvjGeh7M6cT5v5THEu+ASt8S3WoA=="
 )
 raw = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/raw/"
 processed = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/raw/"
-df = spark.read.format("csv").option("inferSchema", "True").option("header",
-"True").option("delimeter",",").load(raw)
-
-display(df)
 
 # COMMAND ----------
 
 spark.conf.set(
     f"fs.azure.account.key.bentalebstorageacc.dfs.core.windows.net", 
-    "f7yngxT+I8Wzy+J0GAoTGBtjqo92greqVvmofq1zHx8msMTSl33Kws93ICPi6fIAR2z5XFn4t/wD+AStcTUhOQ=="
+    "lAFhPBYgmGBlkcaW/xObvOI7lrDKAc7UdNgLilVuxHhvBUAlCxo5hBGcuDtvjGeh7M6cT5v5THEu+ASt8S3WoA=="
 )
 raw = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/raw/"
 
@@ -116,6 +131,5 @@ if not any(mount.mountPoint == mountPoint for mount in dbutils.fs.mounts()):
 # COMMAND ----------
 
 output_path = "/mnt/data/raw/output.csv"  
-
 # Write the DataFrame as a CSV file to the mounted Data Lake Storage
 sparkdf.write.mode("overwrite").csv(output_path)
