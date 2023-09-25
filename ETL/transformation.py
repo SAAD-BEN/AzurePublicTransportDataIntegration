@@ -1,26 +1,45 @@
 # Databricks notebook source
+import pandas as pd
 from datetime import datetime
 from pyspark.sql.functions import col, udf
 from pyspark.sql.types import StringType 
 from pyspark.sql.functions import to_date, year, month, day, hour, minute, when, avg, regexp_replace, mean, count, round
 from pyspark.sql.types import IntegerType
+from pyspark.sql import SparkSession
 
 # COMMAND ----------
 
-# Setting Spark Configuration Directly to the blob storege (data lake)
-spark.conf.set(
-    f"fs.azure.account.key.bentalebstorageacc.dfs.core.windows.net", 
-    "lAFhPBYgmGBlkcaW/xObvOI7lrDKAc7UdNgLilVuxHhvBUAlCxo5hBGcuDtvjGeh7M6cT5v5THEu+ASt8S3WoA=="
-)
-raw = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/raw/"
-processed = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/processed/"
+# Mounting data lake
+storageAccountName = "bentalebstorageacc"
+storageAccountAccessKey = "lAFhPBYgmGBlkcaW/xObvOI7lrDKAc7UdNgLilVuxHhvBUAlCxo5hBGcuDtvjGeh7M6cT5v5THEu+ASt8S3WoA=="
+sasToken = "?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-09-25T23:39:50Z&st=2023-09-25T15:39:50Z&spr=https&sig=uF4HRUl2j6IFpEe%2BIziEjACYZdWaK9hq8UZ0C1HjXqk%3D"
+blobContainerName = "publictransportdata"
+mountPoint = "/mnt/publictransportdata/"
+if not any(mount.mountPoint == mountPoint for mount in dbutils.fs.mounts()):
+  try:
+    dbutils.fs.mount(
+      source = "wasbs://{}@{}.blob.core.windows.net".format(blobContainerName, storageAccountName),
+      mount_point = mountPoint,
+      extra_configs = {'fs.azure.sas.' + blobContainerName + '.' + storageAccountName + '.blob.core.windows.net': sasToken}
+    )
+    print("mount succeeded!")
+  except Exception as e:
+    print("mount exception", e)
+
+# COMMAND ----------
+
+raw = "/dbfs/mnt/publictransportdata/raw/"
+processed = "/dbfs/mnt/publictransportdata/processed/"
 
 
 # COMMAND ----------
 
-df = spark.read.format("csv").option("inferSchema", "True").option("header",
-"True").option("delimeter",",").load(raw)
 
+pddf =  pd.read_csv(raw + "rawTransportDataOf_01_2023.csv")
+#Create PySpark SparkSession
+spark = SparkSession.builder.appName("PandasToSparkDF").getOrCreate()
+#Create PySpark DataFrame from Pandas
+df = spark.CreateDataFrame(pddf)
 
 # year month day
 df = df.withColumn("Year", year(df.Date))
@@ -69,3 +88,7 @@ df_avg = df.groupBy("Route").agg(
 )
 
 df_avg.show()
+
+# COMMAND ----------
+
+dbutils.fs.unmount("/mnt/publictransportdata/")

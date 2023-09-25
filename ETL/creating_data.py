@@ -11,17 +11,6 @@ from pyspark.sql import SparkSession
 
 # COMMAND ----------
 
-# connect to azure data lake using direct configurations
-spark.conf.set(
-    f"fs.azure.account.key.bentalebstorageacc.dfs.core.windows.net", 
-    "lAFhPBYgmGBlkcaW/xObvOI7lrDKAc7UdNgLilVuxHhvBUAlCxo5hBGcuDtvjGeh7M6cT5v5THEu+ASt8S3WoA=="
-)
-raw = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/raw/"
-processed = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/raw/"
-
-# COMMAND ----------
-
-dbutils.fs.unmount("/mnt/publictransportdata/")
 # Mounting data lake
 storageAccountName = "bentalebstorageacc"
 storageAccountAccessKey = "lAFhPBYgmGBlkcaW/xObvOI7lrDKAc7UdNgLilVuxHhvBUAlCxo5hBGcuDtvjGeh7M6cT5v5THEu+ASt8S3WoA=="
