@@ -13,8 +13,8 @@ from pyspark.sql import SparkSession
 
 # Mounting data lake
 storageAccountName = "bentalebstorageacc"
-storageAccountAccessKey = "lAFhPBYgmGBlkcaW/xObvOI7lrDKAc7UdNgLilVuxHhvBUAlCxo5hBGcuDtvjGeh7M6cT5v5THEu+ASt8S3WoA=="
-sasToken = "?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-09-25T23:39:50Z&st=2023-09-25T15:39:50Z&spr=https&sig=uF4HRUl2j6IFpEe%2BIziEjACYZdWaK9hq8UZ0C1HjXqk%3D"
+storageAccountAccessKey = "6eZ31oe7aTRK1+aSifn5vg7AmN/XZ+PWbgMBOqb3O3mt22OrW0jWNld9ZODh5rcs/P5ZEzuEtBs2+AStGnMmQA=="
+sasToken = "?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-09-26T17:26:29Z&st=2023-09-26T09:26:29Z&spr=https&sig=b0aopyN4k73YZ%2B4AeCIeZggqFSrq76bS477XUkkxDAY%3D"
 blobContainerName = "publictransportdata"
 mountPoint = "/mnt/publictransportdata/"
 if not any(mount.mountPoint == mountPoint for mount in dbutils.fs.mounts()):
