@@ -2,9 +2,8 @@
 import pandas as pd
 from datetime import datetime
 from pyspark.sql.functions import col, udf
-from pyspark.sql.types import StringType 
+from pyspark.sql.types import StringType,IntegerType
 from pyspark.sql.functions import to_date, year, month, day, hour, minute, when, avg, regexp_replace, mean, count, round
-from pyspark.sql.types import IntegerType
 from pyspark.sql import SparkSession
 
 # COMMAND ----------
@@ -28,12 +27,8 @@ if not any(mount.mountPoint == mountPoint for mount in dbutils.fs.mounts()):
 
 # COMMAND ----------
 
-spark.conf.set(
-    f"fs.azure.account.key.bentalebstorageacc.dfs.core.windows.net", 
-    "6eZ31oe7aTRK1+aSifn5vg7AmN/XZ+PWbgMBOqb3O3mt22OrW0jWNld9ZODh5rcs/P5ZEzuEtBs2+AStGnMmQA=="
-)
-raw = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/raw/"
-processed = "abfss://publictransportdata@bentalebstorageacc.dfs.core.windows.net/processed/"
+raw = f"{mountPoint}raw/"
+processed = f"{mountPoint}processed/"
 
 processed_count = 0
 raw_files = dbutils.fs.ls(raw)
@@ -42,7 +37,7 @@ raw_file_count = len(raw_csv_files)
 processed_files = dbutils.fs.ls(processed + "transport/")
 processed_csv_files = [f.path for f in processed_files if f.name.endswith(".csv")]
 for i in range(raw_file_count):
-    specific_name = processed + "transport/"+  raw_csv_files[i].replace("raw", "").split("/")[-1].split(".")[0] + "_processed.csv"
+    specific_name = "dbfs:" + processed + "transport/"+  raw_csv_files[i].replace("raw", "").split("/")[-1].split(".")[0] + "_processed.csv"
     if processed_count == 2:
         break
     elif specific_name in processed_csv_files:
