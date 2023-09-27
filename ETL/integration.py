@@ -10,8 +10,8 @@ from pyspark.sql import SparkSession
 
 # Mounting data lake
 storageAccountName = "bentalebstorageacc"
-storageAccountAccessKey = "6eZ31oe7aTRK1+aSifn5vg7AmN/XZ+PWbgMBOqb3O3mt22OrW0jWNld9ZODh5rcs/P5ZEzuEtBs2+AStGnMmQA=="
-sasToken = "?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-09-26T17:26:29Z&st=2023-09-26T09:26:29Z&spr=https&sig=b0aopyN4k73YZ%2B4AeCIeZggqFSrq76bS477XUkkxDAY%3D"
+storageAccountAccessKey = "GywYlyJdlkIqmpXSCXYPrrb0GpGAmTOxtBGDs7XuHMN4560s7BFpx6m50iG0Q1ZVj0oPiV2mtqVC+AStqFxSTw=="
+sasToken = "?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-09-27T15:43:46Z&st=2023-09-27T07:43:46Z&spr=https&sig=j1eZSlIJwwSBiiarU%2BqjILJ0nSIopL%2BS86m82Mlry24%3D"
 blobContainerName = "publictransportdata"
 mountPoint = "/mnt/publictransportdata/"
 if not any(mount.mountPoint == mountPoint for mount in dbutils.fs.mounts()):
@@ -30,12 +30,16 @@ if not any(mount.mountPoint == mountPoint for mount in dbutils.fs.mounts()):
 raw = f"{mountPoint}raw/"
 processed = f"{mountPoint}processed/"
 
+transformationInfo = "All raw data are transformed, You are up to date !"
 processed_count = 0
+
 raw_files = dbutils.fs.ls(raw)
 raw_csv_files = [f.path for f in raw_files if f.name.endswith(".csv")]
 raw_file_count = len(raw_csv_files)
+
 processed_files = dbutils.fs.ls(processed + "transport/")
 processed_csv_files = [f.path for f in processed_files if f.name.endswith(".csv")]
+
 for i in range(raw_file_count):
     specific_name = "dbfs:" + processed + "transport/"+  raw_csv_files[i].replace("raw", "").split("/")[-1].split(".")[0] + "_processed.csv"
     if processed_count == 2:
@@ -43,6 +47,8 @@ for i in range(raw_file_count):
     elif specific_name in processed_csv_files:
         continue
     else:
+        if processed_count == 0:
+            transformationInfo = "Transformation done for : "
         df = spark.read.format("csv").option("inferSchema", "True").option("header",
         "True").option("delimeter",",").load(raw_csv_files[i])
 
@@ -96,9 +102,11 @@ for i in range(raw_file_count):
         pandasDF.to_csv(file_name, index=False)
         
         processed_count += 1
-        print("processed Month - " + str(i + 1))
+        transformationInfo += " - " + raw_csv_files[i].split("/")[-1].split(".")[0]
+        print("processed Month - \"" + raw_csv_files[i].split("/")[-1].split(".")[0] + "\"")
 
+dbutils.notebook.exit(transformationInfo)
 
 # COMMAND ----------
 
-dbutils.fs.unmount("/mnt/publictransportdata/")
+dbutils.fs.unmount(mountPoint)
